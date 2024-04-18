@@ -2,6 +2,14 @@ import React, { useState } from 'react';
 import './App.css';
 
 export default function App() {
+  const STATUS = {
+    TEXT: 'text',
+    NOTE: 'note',
+    TODO: 'todo',
+    DOING: 'doing',
+    DONE: 'done',
+  };
+
   const [task, setTask] = useState('');
   const [taskList, setTaskList] = useState([]);
   const [noteList, setNoteList] = useState([]);
@@ -32,11 +40,26 @@ export default function App() {
     if (event.key === 'Enter') handleAddTask();
   };
 
-  const handleRemoveDiv = (event, state, setState) => {
+  const handleRemoveDiv = (event, state, setState, statusToRemove) => {
     event.preventDefault();
-    setState([...state, event.target.getAttribute('value')]);
+    const valueToRemove = event.target.getAttribute('value');
 
-    event.target.remove();
+    const updatedState = state.filter((item) => item !== valueToRemove);
+    setState(updatedState);
+
+    if (statusToRemove === STATUS.TODO) {
+      setTaskList(updatedState);
+      const taskToMove = state.find((item) => item === valueToRemove);
+      setDoingList([...doingList, taskToMove]);
+    } else if (statusToRemove === STATUS.DOING) {
+      setDoingList(updatedState);
+      const taskToMove = state.find((item) => item === valueToRemove);
+      setDoneList([...doneList, taskToMove]);
+    } else if (statusToRemove === STATUS.DONE) {
+      setDoneList(updatedState);
+      const taskToMove = state.find((item) => item === valueToRemove);
+      setTaskList([...taskList, taskToMove]);
+    }
   };
 
   return (
@@ -77,9 +100,9 @@ export default function App() {
           {taskList.map((taskItem, index) => (
             <div
               key={index}
-              onClick={(event) => {
-                handleRemoveDiv(event, doingList, setDoingList);
-              }}
+              onClick={(event) =>
+                handleRemoveDiv(event, taskList, setTaskList, STATUS.TODO)
+              }
               className="hover:bg-sky-700 max-w-xl truncate"
               value={taskItem}
             >
@@ -92,9 +115,9 @@ export default function App() {
           {doingList.map((taskItem, index) => (
             <div
               key={index}
-              onClick={(event) => {
-                handleRemoveDiv(event, doneList, setDoneList);
-              }}
+              onClick={(event) =>
+                handleRemoveDiv(event, doingList, setDoingList, STATUS.DOING)
+              }
               className="hover:bg-sky-700 max-w-xl  truncate"
               value={taskItem}
             >
@@ -107,7 +130,9 @@ export default function App() {
           {doneList.map((taskItem, index) => (
             <div
               key={index}
-              onClick={(event) => handleRemoveDiv(event, taskList, setTaskList)}
+              onClick={(event) =>
+                handleRemoveDiv(event, doneList, setDoneList, STATUS.DONE)
+              }
               className="hover:bg-sky-700 max-w-xl  truncate"
               value={taskItem}
             >
